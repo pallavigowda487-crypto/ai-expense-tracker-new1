@@ -51,6 +51,19 @@ cp .env.example .env
 npm run dev
 ```
 
+If port `5000` is still occupied by an old backend process, run:
+
+```bash
+npm run free-port
+npm run dev
+```
+
+You can also restart everything in one command:
+
+```bash
+npm run restart:backend
+```
+
 ## Frontend Setup
 
 1. Open a terminal in the `frontend` folder.

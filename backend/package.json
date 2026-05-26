@@ -5,7 +5,9 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "free-port": "powershell -ExecutionPolicy Bypass -File scripts/free-port.ps1 5000",
+    "restart:backend": "npm run free-port && npm run dev"
   },
   "dependencies": {
     "@google/genai": "^1.0.0",

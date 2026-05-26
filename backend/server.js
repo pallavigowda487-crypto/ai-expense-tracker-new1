@@ -61,15 +61,29 @@ async function startServer() {
   try {
     await connectToDatabase();
 
-    app.listen(PORT, () => {
+    const server = app.listen(PORT, () => {
       console.log(`Server listening on port ${PORT}`);
+    });
+
+    server.on('error', async (error) => {
+      if (error.code === 'EADDRINUSE') {
+        console.warn(`Port ${PORT} is already in use. Another server process is running.`);
+        if (mongoMemoryServer) {
+          await mongoMemoryServer.stop();
+        }
+        process.exit(0);
+        return;
+      }
+
+      console.error('Failed to start server:', error);
+      process.exit(1);
     });
 
     process.on('SIGINT', async () => {
       if (mongoMemoryServer) {
         await mongoMemoryServer.stop();
       }
-      process.exit(0);
+      server.close(() => process.exit(0));
     });
   } catch (error) {
     console.error('Failed to start server:', error);
