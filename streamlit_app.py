@@ -4,7 +4,7 @@ import pandas as pd
 import requests
 import streamlit as st
 
-BACKEND_BASE_URL = os.getenv("BACKEND_BASE_URL", "http://localhost:5000")
+DEFAULT_BACKEND_BASE_URL = os.getenv("BACKEND_BASE_URL") or st.secrets.get("BACKEND_BASE_URL") or "http://localhost:5000"
 
 
 @st.cache_data(show_spinner=False)
@@ -25,11 +25,20 @@ def main():
     st.title("AI Expense Tracker Dashboard")
     st.caption("Live view of expenses from the existing backend API.")
 
+    if DEFAULT_BACKEND_BASE_URL == "http://localhost:5000":
+        st.info(
+            "Set BACKEND_BASE_URL in Streamlit secrets or environment variables to point this dashboard at your deployed backend."
+        )
+
     backend_url = st.text_input(
         "Backend URL",
-        value=BACKEND_BASE_URL,
-        help="Set BACKEND_BASE_URL to avoid changing this field.",
+        value=DEFAULT_BACKEND_BASE_URL,
+        help="Use Streamlit secrets or environment variables for a deployed backend URL.",
     )
+
+    if not backend_url:
+        st.warning("Enter a backend URL before loading expenses.")
+        st.stop()
 
     try:
         expenses = load_expenses(backend_url)
