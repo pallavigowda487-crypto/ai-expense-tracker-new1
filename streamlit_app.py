@@ -1,10 +1,30 @@
 import os
+from urllib.parse import urlparse
 
 import pandas as pd
 import requests
 import streamlit as st
 
 DEFAULT_BACKEND_BASE_URL = os.getenv("BACKEND_BASE_URL") or st.secrets.get("BACKEND_BASE_URL")
+
+
+def is_placeholder_backend_url(backend_url):
+    normalized = backend_url.strip().lower()
+    return (
+        normalized in {
+            "http://your-deployed-backend-url.com",
+            "https://your-deployed-backend-url.com",
+            "http://your-backend-url.com",
+            "https://your-backend-url.com",
+        }
+        or "your-deployed-backend-url.com" in normalized
+        or "your-backend-url.com" in normalized
+    )
+
+
+def is_valid_backend_url(backend_url):
+    parsed = urlparse(backend_url)
+    return parsed.scheme in {"http", "https"} and bool(parsed.netloc)
 
 
 @st.cache_data(show_spinner=False)
@@ -33,15 +53,26 @@ def main():
     backend_url = st.text_input(
         "Backend URL",
         value=DEFAULT_BACKEND_BASE_URL or "",
+        placeholder="https://your-backend-url.com",
         help="Use Streamlit secrets, environment variables, or type the deployed backend URL here.",
-    )
+    ).strip()
 
     if not backend_url:
         st.warning("Enter the deployed backend URL before loading expenses.")
         st.stop()
 
+    if is_placeholder_backend_url(backend_url):
+        st.error(
+            "The URL you entered is a placeholder. Replace it with your actual deployed backend URL, for example https://your-backend-url.com."
+        )
+        st.stop()
+
+    if not is_valid_backend_url(backend_url):
+        st.error("Enter a valid backend URL that starts with http:// or https://.")
+        st.stop()
+
     try:
-        expenses = load_expenses(backend_url)
+        expenses = load_expenses(backend_url.rstrip("/"))
     except requests.RequestException as exc:
         st.error(f"Unable to connect to backend: {exc}")
         st.stop()
